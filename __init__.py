@@ -1,3 +1,17 @@
+bl_info = {"name": "EZ_Draw",
+           "author": "CDMJ",
+           "version": (1, 00),
+           "blender": (2, 79, 0),
+           "location": "Image Editor > UI > Image Resize",
+           "description": "Image Resize for Active Image",
+           "warning": "WIP Test version for later addition to EZ Paint",
+           "wiki_url": "",
+           "category": "Paint"}
+
+
+
+
+
 import bpy
 from bpy.props import *
 #image.size[0]= width
