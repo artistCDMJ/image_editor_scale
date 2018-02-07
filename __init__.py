@@ -65,7 +65,7 @@ def initSceneProperties(scn):
     return
 
 
-initSceneProperties(bpy.context.scene)
+    initSceneProperties(bpy.context.scene)
 
 
 
