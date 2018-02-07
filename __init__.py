@@ -1,4 +1,4 @@
-bl_info = {"name": "EZ_Draw",
+bl_info = {"name": "Image Resize",
            "author": "CDMJ",
            "version": (1, 00),
            "blender": (2, 79, 0),
