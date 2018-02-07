@@ -1,71 +1,97 @@
 import bpy
 from bpy.props import *
+#image.size[0]= width
+#image.size[1]=height
+
 
 
 def initSceneProperties(scn):
+    
+    for area in bpy.context.screen.areas :
+        if area.type == 'IMAGE_EDITOR' :
+            my_img = area.spaces.active.image
+            area.spaces.active.image = my_img
+    
+    
     bpy.types.Scene.MyIntX = IntProperty(
         name = "Scale X", 
         description = "Enter an integer")
-    scn['MyIntX'] = 1024
-
+    scn['MyIntX'] = my_img.size[0]
+    #bpy.types.Scene.MyIntX = IntProperty(default=1024)
     bpy.types.Scene.MyIntY = IntProperty(
         name = "Scale Y", 
         description = "Enter an integer")
-    scn['MyIntY'] = 1024
+    scn['MyIntY'] = my_img.size[1]
+    #bpy.types.Scene.MyIntY = IntProperty(default=1024)
+    
     return
+
 
 initSceneProperties(bpy.context.scene)
 
 
-class GenericOper(bpy.types.Operator):
-    """Generic Operator"""
-    bl_idname = "object.generic_operator" 
-                                     
+
+class ResizeOper(bpy.types.Operator):
+    """Resize Operator"""
+    bl_idname = "object.resize_operator" 
      
-    bl_label = "Generic Operator Template"
+    bl_label = "Resize Active Image"
     bl_options = { 'REGISTER', 'UNDO' }
     
-    
-    
-    def execute(self, context):        
-        
-        
-        
+    def execute(self, context):  
+
         for area in bpy.context.screen.areas :
             if area.type == 'IMAGE_EDITOR' :
                 my_img = area.spaces.active.image
                 area.spaces.active.image = my_img
-                #prop('MyIntX', scn)
-                #prop('MyIntY', scn)
+                
                 my_img.scale(context.scene.MyIntX,context.scene.MyIntY)
+                
+        return {'FINISHED'}
+
+class GetsizeOper(bpy.types.Operator):
+    """Get Size Operator"""
+    bl_idname = "object.getsize_operator" 
+     
+    bl_label = "Get Size of Active Image"
+    bl_options = { 'REGISTER', 'UNDO' }
+    
+    def execute(self, context):  
+
+        for area in bpy.context.screen.areas :
+            if area.type == 'IMAGE_EDITOR' :
+                my_img = area.spaces.active.image
+                area.spaces.active.image = my_img
+                
+                bpy.context.scene['MyIntX'] = my_img.size[0]
+                bpy.context.scene['MyIntY'] = my_img.size[1]
                 
         return {'FINISHED'}
 
 
 
-
-class HelloWorldPanel(bpy.types.Panel):
+class ImageScalePanel(bpy.types.Panel):
     """Creates a Panel in the Object properties window"""
     bl_label = "Image Scale"
     bl_idname = "OBJECT_PT_imagescale"
     bl_space_type = 'IMAGE_EDITOR'
     bl_region_type = 'UI'
-    #bl_context = "object"
-
+   
     def draw(self, context):
         layout = self.layout
         scn = context.scene
         image = bpy.context.space_data.image
 
         row = layout.row()
-        row.label(text="Image Scale Test Panel", icon='WORLD_DATA')
+        row.label(text="", icon='WORLD_DATA')
 
-        row = layout.row()
-        row.label(text="Active image is: " + image.name)
+        #row = layout.row()
+        row.label(text="Active image is:")
         row = layout.row()
         row.prop(image, "name")
         row = layout.row()
-        row.operator("object.generic_operator", text="scale it")
+        row.operator("object.getsize_operator", text="GET SIZE")
+        row.operator("object.resize_operator", text="RESIZE")
         row = layout.row()
         row.prop(scn, 'MyIntX', icon='BLENDER', toggle=True)
         row = layout.row()
@@ -78,15 +104,15 @@ class HelloWorldPanel(bpy.types.Panel):
 
 
 def register():
-    bpy.utils.register_class(HelloWorldPanel)
-    
-    bpy.utils.register_class(GenericOper)
+    bpy.utils.register_class(ImageScalePanel)
+    bpy.utils.register_class(GetsizeOper)
+    bpy.utils.register_class(ResizeOper)
 
 
 def unregister():
-    bpy.utils.unregister_class(HelloWorldPanel)
-    
-    bpy.utils.unregister_class(GenericOper)
+    bpy.utils.unregister_class(ImageScalePanel)
+    bpy.utils.unregister_class(GetsizeOper)
+    bpy.utils.unregister_class(ResizeOper)
 
 if __name__ == "__main__":
     register()
