@@ -35,10 +35,10 @@ class GenericOper(bpy.types.Operator):
             if area.type == 'IMAGE_EDITOR' :
                 my_img = area.spaces.active.image
                 area.spaces.active.image = my_img
-                prop('MyIntX', scn)
-                prop('MyIntY', scn)
-                my_img.scale(MyIntX,MyIntY)
-        
+                #prop('MyIntX', scn)
+                #prop('MyIntY', scn)
+                my_img.scale(context.scene.MyIntX,context.scene.MyIntY)
+                
         return {'FINISHED'}
 
 
