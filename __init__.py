@@ -24,7 +24,7 @@
 
 bl_info = {"name": "Image Resize",
            "author": "CDMJ",
-           "version": (1, 00),
+           "version": (1, 1, 0),
            "blender": (2, 79, 0),
            "location": "Image Editor > UI > Image Resize",
            "description": "Image Resize for Active Image",
@@ -32,125 +32,94 @@ bl_info = {"name": "Image Resize",
            "wiki_url": "",
            "category": "Image"}
 
-
-
-
-
 import bpy
 from bpy.props import *
-#image.size[0]= width
-#image.size[1]=height
+from bpy.types import Panel
 
 
-
-def initSceneProperties(scn):
-    
+##################################################################### Properties
+def getWidth(self):
     for area in bpy.context.screen.areas :
         if area.type == 'IMAGE_EDITOR' :
             my_img = area.spaces.active.image
-            area.spaces.active.image = my_img
-    
-    
-    bpy.types.Scene.MyIntX = IntProperty(
-        name = "Scale X", 
-        description = "Enter an integer")
-    scn['MyIntX'] = my_img.size[0]
-    #bpy.types.Scene.MyIntX = IntProperty(default=1024)
-    bpy.types.Scene.MyIntY = IntProperty(
-        name = "Scale Y", 
-        description = "Enter an integer")
-    scn['MyIntY'] = my_img.size[1]
-    #bpy.types.Scene.MyIntY = IntProperty(default=1024)
-    
-    return
+
+            if my_img != None and my_img.name != "Render Result":
+                return my_img.size[0]
+
+def getHight(self):
+    for area in bpy.context.screen.areas :
+        if area.type == 'IMAGE_EDITOR' :
+            my_img = area.spaces.active.image
+
+            if my_img != None and my_img.name != "Render Result":
+                return my_img.size[1]
 
 
-    initSceneProperties(bpy.context.scene)
+def setWidth(self, value):
+    scn = bpy.context.scene
+    for area in bpy.context.screen.areas :
+        if area.type == 'IMAGE_EDITOR' :
+            my_img = area.spaces.active.image
+            if my_img != None and my_img.name != "Render Result":
+                my_img.scale(value, scn.MyIntY)
+    return None
+
+def setHight(self, value):
+    scn = bpy.context.scene
+    for area in bpy.context.screen.areas :
+        if area.type == 'IMAGE_EDITOR' :
+            my_img = area.spaces.active.image
+            if my_img != None and my_img.name != "Render Result":
+                my_img.scale(scn.MyIntX, value)
+    return None
 
 
+def updateArea(self,context):
 
-class ResizeOper(bpy.types.Operator):
-    """Resize Operator"""
-    bl_idname = "object.resize_operator" 
-     
-    bl_label = "Resize Active Image"
-    bl_options = { 'REGISTER', 'UNDO' }
-    
-    def execute(self, context):  
+    for area in context.screen.areas :
+        if area.type == 'IMAGE_EDITOR' :
+            my_img = area.spaces.active.image
+            if my_img != None and my_img.name != "Render Result":
+                my_img.save()
 
-        for area in bpy.context.screen.areas :
-            if area.type == 'IMAGE_EDITOR' :
-                my_img = area.spaces.active.image
-                area.spaces.active.image = my_img
-                
-                my_img.scale(context.scene.MyIntX,context.scene.MyIntY)
-                
-        return {'FINISHED'}
 
-class GetsizeOper(bpy.types.Operator):
-    """Get Size Operator"""
-    bl_idname = "object.getsize_operator" 
-     
-    bl_label = "Get Size of Active Image"
-    bl_options = { 'REGISTER', 'UNDO' }
-    
-    def execute(self, context):  
-
-        for area in bpy.context.screen.areas :
-            if area.type == 'IMAGE_EDITOR' :
-                my_img = area.spaces.active.image
-                area.spaces.active.image = my_img
-                
-                bpy.context.scene['MyIntX'] = my_img.size[0]
-                bpy.context.scene['MyIntY'] = my_img.size[1]
-                
-        return {'FINISHED'}
+bpy.types.Scene.MyIntX = bpy.props.IntProperty(name="Width", default=0, min=0, update=updateArea,  get=getWidth, set=setWidth )
+bpy.types.Scene.MyIntY = bpy.props.IntProperty(name="Height", default=0, min=0, update=updateArea,  get=getHight, set=setHight )
 
 
 
-class ImageScalePanel(bpy.types.Panel):
-    """Creates a Panel in the Object properties window"""
-    bl_label = "Image Scale"
-    bl_idname = "OBJECT_PT_imagescale"
-    bl_space_type = 'IMAGE_EDITOR'
-    bl_region_type = 'UI'
-   
-    def draw(self, context):
-        layout = self.layout
-        scn = context.scene
-        image = bpy.context.space_data.image
+def image_panel(self, context):
+    scn = context.scene
+    image = context.space_data.image
 
-        row = layout.row()
-        row.label(text="", icon='WORLD_DATA')
+    layout = self.layout
+    row = layout.row()
+    if image != None and image.name != "Render Result":
+        #row.label(text = str(image.name), icon='IMAGE_DATA')
+        col = layout.column(align=True)
+        col.prop(scn, "MyIntX")
+        col.prop(scn, "MyIntY")
+    elif image != None and image.name == "Render Result":
+        rd = scn.render
 
-        #row = layout.row()
-        row.label(text="Active image is:")
-        row = layout.row()
-        row.prop(image, "name")
-        row = layout.row()
-        row.operator("object.getsize_operator", text="GET SIZE")
-        row.operator("object.resize_operator", text="RESIZE")
-        row = layout.row()
-        row.prop(scn, 'MyIntX', icon='BLENDER', toggle=True)
-        row = layout.row()
-        row.prop(scn, 'MyIntY', icon='BLENDER', toggle=True)
-        
-        
-
-        #row = layout.row()
-        #row.operator("mesh.primitive_cube_add")
+        sub = row.column(align=True)
+        sub.label(text="Resolution:")
+        sub.prop(rd, "resolution_x", text="X")
+        sub.prop(rd, "resolution_y", text="Y")
+        sub.prop(rd, "resolution_percentage", text="")
+    else:
+        row.label(text="No Active Image", icon='ERROR')
 
 
+
+####################################################################### REGISTER
 def register():
-    bpy.utils.register_class(ImageScalePanel)
-    bpy.utils.register_class(GetsizeOper)
-    bpy.utils.register_class(ResizeOper)
+    bpy.types.IMAGE_PT_image_properties.prepend(image_panel)
 
 
 def unregister():
-    bpy.utils.unregister_class(ImageScalePanel)
-    bpy.utils.unregister_class(GetsizeOper)
-    bpy.utils.unregister_class(ResizeOper)
+    bpy.types.IMAGE_PT_image_properties.remove(image_panel)
+
 
 if __name__ == "__main__":
     register()
